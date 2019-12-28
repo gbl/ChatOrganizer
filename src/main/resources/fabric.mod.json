@@ -1,0 +1,31 @@
+{
+    "schemaVersion": 1,
+    "id": "chatorganizer",
+    "version": "1.15-fabric0.4.23-1.5",
+    "environment": "client",
+    "entrypoints": {
+        "client": [ "de.guntram.mcmod.chatorganizer.ChatOrganizer" ],
+        "notyet-cotton-client-commands": ["de.guntram.mcmod.chatorganizer.ChatOrganizer"]
+    },
+    "custom": {
+        "modmenu:clientsideOnly": true
+    },
+    "mixins": [
+      	"mixins.chatorganizer.json"
+    ],
+    "depends": {
+      "fabric": "*"
+    },
+    "recommends": {
+      "modmenu" : "*"
+    },
+    "name": "ChatOrganizer",
+    "description": "Organize your chat into tabs!",
+    "icon": "pack.png",
+    "authors": [ "Giselbaer" ],
+    "contact": {
+        "homepage": "https://minecraft.curseforge.com/projects/chatorganizer",
+        "sources": "https://github.com/gbl/ChatOrganizer",
+        "issues": "https://github.com/gbl/ChatOrganizer/issues"
+    }
+}
