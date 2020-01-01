@@ -10,15 +10,15 @@ public class TabManager {
     static int currentTabIndex;
 
     private static List<Tab> tabs;
-    // This is a kludge to avoid and ConcurrentModificationExceptions.
-    private static Tab tabToAddLater;
+    private static Tab tabToAddLater;   // This is a kludge to avoid any ConcurrentModificationExceptions.
 
     static {
         tabs = new ArrayList<>();
-        tabs.add(new Tab("*", null, "", "", true, 0x000000));
-        tabs.add(new Tab("Local", "\\[L\\]", "/ch l", "", true, 0x800000));
-        tabs.add(new Tab("Global", "\\[G\\]", "/ch g", "", true, 0x808000));
-        tabs.add(new Tab("DM \\1", "From (.*?):", "", "/msg \\1", false, 0x800080));
+        tabs.add(new Tab("*", null, "/ch g", "", true, 0xffffff));
+        tabs.add(new Tab("Local", "\\[L\\]", "/ch l", "", true, 0xffff55));
+        tabs.add(new Tab("Global", "\\[G\\]", "/ch g", "", true, 0x00aa00));
+        tabs.add(new Tab("Discord", "\\[Discord\\]", "/ch g", "", true, 0x00aaaa));
+        tabs.add(new Tab("DM \\2", "^(From|To) <(.*?)>", "", "/msg \\2", false, 0x800080));
     }
 
     public static boolean addMessage(Text message, int id, int timestamp, boolean doNotAdd) {
@@ -94,5 +94,11 @@ public class TabManager {
             }
         }
         return false;
+    }
+
+    public static void clearAllTabs() {
+        for (Tab tab:tabs) {
+            tab.reset();
+        }
     }
 }

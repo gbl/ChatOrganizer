@@ -4,7 +4,7 @@
     "refmap": "ChatOrganizer-refmap.json",
     "minVersion": "0.6",
     "client": [
-        "ChatHudMixin", "ChatScreenMixin"
+        "ChatHudMixin", "ChatScreenMixin", "ConnectMixin"
     ],
     "injectors": {
         "defaultRequire": 1

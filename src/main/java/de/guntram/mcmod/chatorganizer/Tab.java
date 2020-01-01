@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.util.Texts;
+import net.minecraft.util.math.MathHelper;
 
 public class Tab {
     final public String name;
@@ -24,6 +28,8 @@ public class Tab {
     private double xpos, ypos, width, height;
     private List<ChatHudLine> messages;
     private String groupMatch;
+    private boolean closable;
+    private boolean shouldAddAnyway;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -37,6 +43,8 @@ public class Tab {
 
         this.compileRegex();
         this.messages = new ArrayList<>();
+        this.closable = false;
+        this.shouldAddAnyway = false;
     }
 
     public void setRenderedPos(double x, double y, double width, double height) {
@@ -58,41 +66,67 @@ public class Tab {
     public boolean addMessage(Text message, int id, int timestamp, boolean doNotAdd, boolean forced) {
         if (!doNotAdd) {
             boolean ok;
+            String text = "";
             Matcher matcher=null;
             if (pattern == null) {
                 ok = true;
             } else if (forced) {
+                // If we are forced to accept the string (which means we're called from the regex tab that created us)
+                // we should return "added" the next time the TabManager calls us, even when we don't add then.
+                shouldAddAnyway = true;
                 ok = true;
             } else {
-                matcher=pattern.matcher(message.asString());
+                // I don't understand this, but LiteralText chat messages return empty in asString and text in asFormattedString.
+                // this should really be text=message.asString()
+                text=message.asFormattedString();
+                text=text.replaceAll("§.", "");
+                matcher=pattern.matcher(text);
                 ok = matcher.find();
             }
             if (ok) {
-                messages.add(0, new ChatHudLine(timestamp, message, id));
-                LOGGER.info("added "+message.asString()+" to "+this.name);
-                if (matcher != null && matcher.groupCount() > 0 && this.name.contains("\\1")) {
-                    String newTabName = this.name.replace("\\1", matcher.group(1));
-                    String newMessageCommand = this.messageCommand.replace("\\1", matcher.group(1));
+                if (matcher != null && matcher.groupCount() > 0 && this.name.contains("\\")) {
+                    String newTabName = insertMatcherGroups(this.name, matcher);
+                    String newMessageCommand = insertMatcherGroups(this.messageCommand, matcher);
                     Tab realTab = TabManager.getTab(newTabName);
                     if (realTab == null) {
                         realTab = new Tab(newTabName, "!!!easter egg!!!", this.tabCommand, newMessageCommand, true, this.colorCode);
                         TabManager.addTabLater(realTab);
                     }
+                    LOGGER.info("forwarded "+message.asFormattedString()+" to "+realTab.name);
                     realTab.addMessage(message, id, timestamp, doNotAdd, true);
+                } else {
+                    LOGGER.info("added "+message.asFormattedString()+" to "+this.name);
+                    
+                    MinecraftClient client = MinecraftClient.getInstance();
+                    ChatHud hud = client.inGameHud.getChatHud();
+                    int i = MathHelper.floor((double)hud.getWidth() / hud.getChatScale());
+                    List<Text> list = Texts.wrapLines(message, i, client.textRenderer, false, false);
+                    for (Text part: list) {
+                        messages.add(0, new ChatHudLine(timestamp, part, id));
+                    }
                 }
                 return true;
             } else {
-                LOGGER.info("ignored "+message.asString()+" in "+this.name);
+                LOGGER.info("ignored "+text+"/"+message.asString()+"/"+message.asFormattedString()+" in "+this.name);
+                LOGGER.debug("class is "+message.getClass().getName());
+                if (shouldAddAnyway) {
+                    shouldAddAnyway = false;
+                    return true;
+                }
                 return false;
             }
         }
         LOGGER.info("not added "+message.asString()+" in "+this.name);
         return true;
     }
-
-    public void replaceMessages(List<ChatHudLine>messages) {
+    
+    public void reset() {
         this.messages.clear();
-        this.messages.addAll(messages);
+    }
+
+    public void replaceMessages(List<ChatHudLine>newMessages) {
+        reset();
+        this.messages.addAll(newMessages);
     }
 
     public List<ChatHudLine> getMessages() {
@@ -101,6 +135,14 @@ public class Tab {
             messages.add(new ChatHudLine(0, new LiteralText("Messages for "+name), 0 ));
         }
         return messages;
+    }
+    
+    public void setClosable(boolean b) {
+        this.closable = b;
+    }
+    
+    public boolean isClosable() {
+        return closable;
     }
 
     private void compileRegex() {
@@ -112,5 +154,20 @@ public class Tab {
             this.pattern = null;
         }
     }
-
+    
+    private String insertMatcherGroups(String name, Matcher matcher) {
+        StringBuilder result=new StringBuilder();
+        for (int i=0; i<name.length(); i++) {
+            if (name.charAt(i) == '\\' && i < name.length()-1 && name.charAt(i+1) >= '0' && name.charAt(i+1) <= '9') {
+                int groupIndex = name.charAt(i+1) - '0';
+                if (groupIndex <= matcher.groupCount()) {
+                    result.append(matcher.group(groupIndex));
+                    i++;
+                } // no else here; groups that don't exist in the regex are assumed to be empty
+            } else {
+                result.append(name.charAt(i));
+            }
+        }
+        return result.toString();
+    }
 }

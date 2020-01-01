@@ -40,6 +40,9 @@ public class ChatScreenMixin extends Screen {
             return;
         }
         String string = this.chatField.getText().trim();
+        if (string.startsWith("/")) {
+            return;
+        }
         LOGGER.info("prepended "+tab.messageCommand+" to "+string);
         this.sendMessage(tab.messageCommand+" "+string);
         this.minecraft.openScreen(null);

@@ -3,6 +3,7 @@ package de.guntram.mcmod.chatorganizer.mixin;
 import de.guntram.mcmod.chatorganizer.ChatHudExtension;
 import de.guntram.mcmod.chatorganizer.Tab;
 import de.guntram.mcmod.chatorganizer.TabManager;
+import java.lang.Math;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.ChatHud;
@@ -28,6 +29,7 @@ public class ChatHudMixin extends DrawableHelper implements ChatHudExtension {
     @Shadow public double getChatScale() {return 0;};
     @Shadow public int getWidth() { return 0; }
     @Shadow public boolean isChatFocused() {return true;};
+    @Shadow public int getVisibleLineCount() { return 0; }
     @Shadow @Final private MinecraftClient client;
     @Shadow @Final private List<ChatHudLine> visibleMessages, messages;
 
@@ -37,7 +39,10 @@ public class ChatHudMixin extends DrawableHelper implements ChatHudExtension {
             return;
         }
         Matrix4f matrix4f = Matrix4f.method_24021(0.0F, 0.0F, -100.0F);
-        int ypos = this.visibleMessages.size()*9;
+        int maxLines = this.getVisibleLineCount();
+        int usedLines = this.visibleMessages.size();
+        
+        int ypos = Math.min(usedLines, maxLines)*9;
         int xpos = 0;
         for (Tab tab: TabManager.getTabs()) {
             if (!(tab.visible)) {
@@ -45,9 +50,12 @@ public class ChatHudMixin extends DrawableHelper implements ChatHudExtension {
             }
             String s = tab.name;
             int width = this.client.textRenderer.getStringWidth(s);
-            fill(matrix4f, xpos, -ypos-13, xpos+width+20, -ypos-2, 0xffc0c0c0);
-            fill(matrix4f, xpos-2, -ypos-13, xpos+2, -ypos-4, 0xff000000 );
-            this.client.textRenderer.draw(s, xpos+10, -ypos-11, TabManager.tabIsFocused(tab) ? 0xffff0000 : 0xff000000 | tab.colorCode);
+            fill(matrix4f, xpos, -ypos-13, xpos+width+20, -ypos-2, 0xffc6c6c6);
+            fill(matrix4f, xpos-2, -ypos-13, xpos+2, -ypos-4, 0xff8b8b8b );
+            this.client.textRenderer.draw(s, xpos+10, -ypos-11, tab.colorCode);
+            if (TabManager.tabIsFocused(tab)) {
+                fill(matrix4f, xpos-2, -ypos-3, xpos+2, -ypos-3, tab.colorCode);
+            }
             // RenderSystem.translate has Y set here so we need to adjust...
             tab.setRenderedPos(xpos+3, -ypos-13+this.client.getWindow().getScaledHeight()-38, width+20-6, 11);
             xpos += width + 20;
@@ -61,11 +69,13 @@ public class ChatHudMixin extends DrawableHelper implements ChatHudExtension {
         }
     }
 
+    @Override
     public void replaceMessages(List<ChatHudLine> newMessages) {
         visibleMessages.clear();
         visibleMessages.addAll(newMessages);
     }
 
+    @Override
     public List<ChatHudLine> getMessages() {
         return visibleMessages;
     }
