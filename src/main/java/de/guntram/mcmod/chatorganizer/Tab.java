@@ -64,9 +64,18 @@ public class Tab {
     }
 
     public boolean addMessage(Text message, int id, int timestamp, boolean doNotAdd, boolean forced) {
+        String formattedMessage = message.asFormattedString();
+        // I don't understand this, but LiteralText chat messages return empty in asString and text in asFormattedString.
+        // this should really be text=message.asString()
+        String text = formattedMessage.replaceAll("§.", "");
+        if (ConfigurationHandler.getDebugChatMessages()) {
+            LOGGER.info("ChatMessage in "+name+": "+formattedMessage);
+        }
+        if (ConfigurationHandler.getDebugChatText()) {
+            LOGGER.info("ChatText in"+name+": "+text);
+        }
         if (!doNotAdd) {
             boolean ok;
-            String text = "";
             Matcher matcher=null;
             if (pattern == null) {
                 ok = true;
@@ -76,10 +85,6 @@ public class Tab {
                 shouldAddAnyway = true;
                 ok = true;
             } else {
-                // I don't understand this, but LiteralText chat messages return empty in asString and text in asFormattedString.
-                // this should really be text=message.asString()
-                text=message.asFormattedString();
-                text=text.replaceAll("§.", "");
                 matcher=pattern.matcher(text);
                 ok = matcher.find();
             }
@@ -92,10 +97,10 @@ public class Tab {
                         realTab = new Tab(newTabName, "!!!easter egg!!!", this.tabCommand, newMessageCommand, true, this.colorCode);
                         TabManager.addTabLater(realTab);
                     }
-                    LOGGER.info("forwarded "+message.asFormattedString()+" to "+realTab.name);
+                    LOGGER.debug("forwarded "+text+" to "+realTab.name);
                     realTab.addMessage(message, id, timestamp, doNotAdd, true);
                 } else {
-                    LOGGER.info("added "+message.asFormattedString()+" to "+this.name);
+                    LOGGER.debug("added "+text+" to "+this.name);
                     
                     MinecraftClient client = MinecraftClient.getInstance();
                     ChatHud hud = client.inGameHud.getChatHud();
@@ -107,8 +112,7 @@ public class Tab {
                 }
                 return true;
             } else {
-                LOGGER.info("ignored "+text+"/"+message.asString()+"/"+message.asFormattedString()+" in "+this.name);
-                LOGGER.debug("class is "+message.getClass().getName());
+                LOGGER.debug("ignored "+text+" in "+this.name);
                 if (shouldAddAnyway) {
                     shouldAddAnyway = false;
                     return true;
