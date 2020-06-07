@@ -1,20 +1,20 @@
 package de.guntram.mcmod.chatorganizer;
 
-import net.minecraft.client.gui.hud.ChatHudLine;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import net.minecraft.class_5348;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.util.Texts;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Tab {
     final public String name;
@@ -59,11 +59,11 @@ public class Tab {
         return x > xpos && x <= xpos+width && y > ypos && y < ypos+height;
     }
 
-    public boolean addMessage(Text message, int id, int timestamp, boolean doNotAdd) {
+    public boolean addMessage(class_5348 message, int id, int timestamp, boolean doNotAdd) {
         return addMessage(message, id, timestamp, doNotAdd, false);
     }
 
-    public boolean addMessage(Text message, int id, int timestamp, boolean doNotAdd, boolean forced) {
+    public boolean addMessage(class_5348 message, int id, int timestamp, boolean doNotAdd, boolean forced) {
         String formattedMessage = message.asFormattedString();
         // I don't understand this, but LiteralText chat messages return empty in asString and text in asFormattedString.
         // this should really be text=message.asString()

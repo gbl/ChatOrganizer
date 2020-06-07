@@ -1,10 +1,9 @@
 package de.guntram.mcmod.chatorganizer;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.class_5348;
+import net.minecraft.client.MinecraftClient;
 
 public class TabManager {
     static int currentTabIndex;
@@ -21,7 +20,7 @@ public class TabManager {
         tabs.add(new Tab("DM \\2", "^(From|To) <(.*?)>", "", "/msg \\2", false, 0x800080));
     }
 
-    public static boolean addMessage(Text message, int id, int timestamp, boolean doNotAdd) {
+    public static boolean addMessage(class_5348 message, int id, int timestamp, boolean doNotAdd) {
         boolean currentAccepted = false;
         tabToAddLater = null;
         for (Tab tab: tabs) {
